@@ -20,6 +20,7 @@ function App() {
     const [address, setAddress] = useState('--Address Here--')
     const [personalMessage, setPersonalMessage] = useState('Personal Message Signing')
     const [connectButtonLabel, setConnectButtonLabel] = useState('Connect Metamask')
+    const [loading, setLoading] = useState(true)
 
 
   useEffect(() => {
@@ -73,6 +74,8 @@ function App() {
             console.log('Txn failed', JSON.parse(data));
           }
       );
+
+      setLoading(false)
     });
   }, []);
 
@@ -159,7 +162,10 @@ function App() {
 
     return (
     <div className="App">
-      <center><h1>Welcome to the best game ever</h1></center>
+        { loading &&
+            <center><h1>Loading...Please Wait...</h1></center>
+        }
+      <center><h2>Welcome to the best game ever</h2></center>
         <p>1. Connect wallet using the connect button below</p>
         <p>2. Once you see your address...you are logged in to the game. Click on "Login with provider" to login to singularity using provider available on game side</p>
         <p>3. Now test the transactions</p>
