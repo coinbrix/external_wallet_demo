@@ -12,7 +12,8 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4",
     "uuid": "^9.0.0",
-    "crypto-js": "^4.1.1"
+    "crypto-js": "^4.1.1",
+    "@mui/material": "^5.11.4"
   },
   "scripts": {
     "start": "react-scripts start",

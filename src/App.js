@@ -5,6 +5,7 @@ import { MetaMaskSDK } from '@metamask/sdk';
 import { v4 as uuidv4 } from 'uuid';
 import Hex from 'crypto-js/enc-hex';
 import hmacSHA512 from 'crypto-js/hmac-sha512';
+import TransactionCard from "./components/TransactionCard";
 
 
 
@@ -24,7 +25,17 @@ function App() {
   useEffect(() => {
     console.log('adding event listener', new Date().getSeconds());
     window.document.body.addEventListener('Singularity-mounted', () => {
-      let key = 2;
+
+        // eslint-disable-next-line no-restricted-globals
+        const url_string = location.href;
+        const url = new URL(url_string);
+        const key = url.searchParams.get("key") ?? 2;
+
+        console.log('key from params', key)
+
+
+      // let key = 2;
+      // let key = 97;
 
       window.Singularity.init(key);
 
@@ -126,8 +137,8 @@ function App() {
             transactionIconLink:
                 'https://singularity-icon-assets.s3.ap-south-1.amazonaws.com/currency/matic.svg',
             clientReceiveObject: {
-                clientRequestedAssetId: 84,
-                clientRequestedAssetQuantity: 0.0001,
+                clientRequestedAssetId: 800011,
+                clientRequestedAssetQuantity: 0.00001,
             },
         };
 
@@ -140,14 +151,25 @@ function App() {
         await window.SingularityEvent.transactionFlowCustomProvider(requestString, signature, ethereum)
     }
 
+    const handleLoginWithProvider = async () => {
+        await window.SingularityEvent.loginWithProvider(ethereum)
+    }
 
-  return (
+
+
+    return (
     <div className="App">
+      <center><h1>Welcome to the best game ever</h1></center>
+        <p>1. Connect wallet using the connect button below</p>
+        <p>2. Once you see your address...you are logged in to the game. Click on "Login with provider" to login to singularity using provider available on game side</p>
+        <p>3. Now test the transactions</p>
       <p>{address}</p>
       <button onClick={onConnectMetamaskClicked}>{connectButtonLabel}</button>
       <button onClick={onPersonalMessageSignedClicked}>Get Personal Message Signed</button>
       <button onClick={onTypedMessageSignedClicked}>Get Typed Message Signed</button>
-      <button onClick={handleReceiveTransactionClicked}>Start Receive Transaction</button>
+      {/*<button onClick={handleReceiveTransactionClicked}>Start Receive Transaction</button>*/}
+      <button onClick={handleLoginWithProvider}>Login with provider</button>
+      <TransactionCard />
     </div>
   );
 }
