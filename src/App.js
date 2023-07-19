@@ -88,7 +88,7 @@ function App() {
   }
 
     const onPersonalMessageSignedClicked = async () => {
-        const signature = await window.SingularityEvent.requestPersonalSignatureCustomProvider(personalMessage, ethereum)
+        const signature = await window.SingularityEvent.requestPersonalSignature(personalMessage)
         console.log('Signature demo',signature)
         if (signature.metaData)
             window.alert('Signature: ' + signature.metaData);
@@ -121,7 +121,7 @@ function App() {
 
         const primaryType ="bid";
 
-        const signature = await window.SingularityEvent.requestTypedSignatureCustomProvider(domain, primaryType, types, message, ethereum)
+        const signature = await window.SingularityEvent.requestTypedSignature(domain, primaryType, types, message)
 
         console.log('Signature demo',signature)
         if (signature.metaData)
@@ -151,7 +151,7 @@ function App() {
         console.log('Body to generate signature ---->', body);
         const requestString = JSON.stringify(body);
         const signature = Hex.stringify(hmacSHA512(requestString, secret));
-        await window.SingularityEvent.transactionFlowCustomProvider(requestString, signature, ethereum)
+        await window.SingularityEvent.transactionFlow(requestString, signature)
     }
 
     const handleLoginWithProvider = async () => {
@@ -171,10 +171,10 @@ function App() {
         <p>3. Now test the transactions</p>
       <p>{address}</p>
       <button onClick={onConnectMetamaskClicked}>{connectButtonLabel}</button>
+        <button onClick={handleLoginWithProvider}>Login with provider</button>
       <button onClick={onPersonalMessageSignedClicked}>Get Personal Message Signed</button>
-      <button onClick={onTypedMessageSignedClicked}>Get Typed Message Signed</button>
+      {/*<button onClick={onTypedMessageSignedClicked}>Get Typed Message Signed</button>*/}
       {/*<button onClick={handleReceiveTransactionClicked}>Start Receive Transaction</button>*/}
-      <button onClick={handleLoginWithProvider}>Login with provider</button>
       <TransactionCard />
     </div>
   );
