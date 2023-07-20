@@ -1,14 +1,21 @@
-import logo from './logo.svg';
-import './App.css';
 import {useEffect, useState} from "react";
 import { MetaMaskSDK } from '@metamask/sdk';
 import { v4 as uuidv4 } from 'uuid';
 import Hex from 'crypto-js/enc-hex';
 import hmacSHA512 from 'crypto-js/hmac-sha512';
 import TransactionCard from "./components/TransactionCard";
+import Onboard from '@web3-onboard/core'
+import walletConnectModule from '@web3-onboard/walletconnect'
+import { providers } from "ethers";
 
-
-
+export const POLYGON_ALCHEMY_RPC_API_KEY = 'JMO79zfZTuw2dVCRIAfvqUthDSOFPzG0';
+export const POLYGON_ALCHEMY_RPC_URL = `https://polygon-mainnet.g.alchemy.com/v2/${POLYGON_ALCHEMY_RPC_API_KEY}`;
+export const POLYGON_MUMBAI_RPC_URL = `https://skilled-dawn-research.matic-testnet.quiknode.pro/ad667afe0dad9b979ffb5053038c93cf1ce4b066/`;
+export const POLYGON_CHAIN_ID = '0x89';
+export const POLYGON_MUMBAI_ID = '0x13881';
+export const POLYGON_TOKEN = 'MATIC';
+export const POLYGON_LABEL = 'Polygon Mainnet';
+export const POLYGON_MUMBAI_LABEL = 'Polygon Mumbai';
 
 function App() {
 
@@ -16,11 +23,60 @@ function App() {
     const MMSDK = new MetaMaskSDK(options);
     const ethereum = MMSDK.getProvider(); // You can also access via window.ethereum
 
+    const [wcProvider, setWcProvider] = useState()
+
 
     const [address, setAddress] = useState('--Address Here--')
     const [personalMessage, setPersonalMessage] = useState('Personal Message Signing')
     const [connectButtonLabel, setConnectButtonLabel] = useState('Connect Metamask')
     const [loading, setLoading] = useState(true)
+
+    const wcV2InitOptions = {
+        /**
+         * Project ID associated with [WalletConnect account](https://cloud.walletconnect.com)
+         */
+        projectId: '6f8be5b49de8e66f26bd138769b2af70',
+        /**
+         * Chains required to be supported by all wallets connecting to your DApp
+         */
+        requiredChains: [1],
+        /**
+         * Defaults to `appMetadata.explore` that is supplied to the web3-onboard init
+         * Strongly recommended to provide atleast one URL as it is required by some wallets (i.e. MetaMask)
+         * To connect with WalletConnect
+         */
+        dappUrl: 'http://YourAwesomeDapp.com'
+    }
+
+    const walletConnect = walletConnectModule(wcV2InitOptions)
+
+
+    const onboard = Onboard({
+        // ... other Onboard options
+        wallets: [
+            walletConnect
+            //... other wallets
+        ],
+        appMetadata: {
+            explore: 'http://YourAwesomeDapp.com',
+            name: 'dss',
+            description: 'dwfgeg'
+        },
+        chains: [
+        {
+            id: POLYGON_CHAIN_ID,
+            token: POLYGON_TOKEN,
+            label: POLYGON_LABEL,
+            rpcUrl: POLYGON_ALCHEMY_RPC_URL
+        },
+        {
+            id: POLYGON_MUMBAI_ID,
+            token: POLYGON_TOKEN,
+            label: POLYGON_MUMBAI_LABEL,
+            rpcUrl: POLYGON_MUMBAI_RPC_URL
+        }
+    ],
+    })
 
 
   useEffect(() => {
@@ -86,6 +142,24 @@ function App() {
       setConnectButtonLabel('Connected')
       console.log('address', add)
   }
+
+    const onConnectWalletConnectClicked = async () => {
+        const connectedWallets = await onboard.connectWallet()
+        console.log(connectedWallets)
+        const walletData = connectedWallets[0]
+
+        console.log('ppp', walletData.provider)
+
+        setWcProvider(walletData.provider)
+        setAddress(walletData.accounts[0].address)
+
+        // ethereum = walletData.instance
+        // const add = await ethereum.request({method: 'eth_requestAccounts', params: []});
+        // const addValue = add[0]
+        // setAddress(addValue)
+        // setConnectButtonLabel('Connected')
+        // console.log('address', add)
+    }
 
     const onPersonalMessageSignedClicked = async () => {
         const signature = await window.SingularityEvent.requestPersonalSignature(personalMessage)
@@ -155,12 +229,20 @@ function App() {
     }
 
     const handleLoginWithProvider = async () => {
-        await window.SingularityEvent.loginWithProvider(ethereum)
+      console.log('using this to login', wcProvider)
+
+
+        const etherProvider = new providers.Web3Provider(wcProvider);
+
+        console.log('etherProvider',etherProvider)
+
+        await window.SingularityEvent.loginWithProvider(wcProvider)
     }
 
 
 
     return (
+        <>
     <div className="App">
         { loading &&
             <center><h1>Loading...Please Wait...</h1></center>
@@ -171,12 +253,14 @@ function App() {
         <p>3. Now test the transactions</p>
       <p>{address}</p>
       <button onClick={onConnectMetamaskClicked}>{connectButtonLabel}</button>
+        <button onClick={onConnectWalletConnectClicked}>Connect wallet connect</button>
         <button onClick={handleLoginWithProvider}>Login with provider</button>
       <button onClick={onPersonalMessageSignedClicked}>Get Personal Message Signed</button>
       {/*<button onClick={onTypedMessageSignedClicked}>Get Typed Message Signed</button>*/}
       {/*<button onClick={handleReceiveTransactionClicked}>Start Receive Transaction</button>*/}
       <TransactionCard />
     </div>
+            </>
   );
 }
 
