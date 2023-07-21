@@ -126,6 +126,7 @@ function App() {
       });
       window.SingularityEvent.subscribe('SingularityEvent-login', data => {
         console.log('login data --->', data);
+        alert(`Logged in user data -----> ${data}`)
         window.SingularityEvent.close();
       });
 
