@@ -7,15 +7,84 @@ import TransactionCard from "./components/TransactionCard";
 import Onboard from '@web3-onboard/core'
 import walletConnectModule from '@web3-onboard/walletconnect'
 import { providers } from "ethers";
+import {TextField} from "@mui/material";
 
 export const POLYGON_ALCHEMY_RPC_API_KEY = 'JMO79zfZTuw2dVCRIAfvqUthDSOFPzG0';
 export const POLYGON_ALCHEMY_RPC_URL = `https://polygon-mainnet.g.alchemy.com/v2/${POLYGON_ALCHEMY_RPC_API_KEY}`;
-export const POLYGON_MUMBAI_RPC_URL = `https://skilled-dawn-research.matic-testnet.quiknode.pro/ad667afe0dad9b979ffb5053038c93cf1ce4b066/`;
+// export const POLYGON_MUMBAI_RPC_URL = `https://skilled-dawn-research.matic-testnet.quiknode.pro/ad667afe0dad9b979ffb5053038c93cf1ce4b066/`;
+export const POLYGON_MUMBAI_RPC_URL = `https://rpc-mumbai.maticvigil.com/`;
 export const POLYGON_CHAIN_ID = '0x89';
 export const POLYGON_MUMBAI_ID = '0x13881';
 export const POLYGON_TOKEN = 'MATIC';
 export const POLYGON_LABEL = 'Polygon Mainnet';
 export const POLYGON_MUMBAI_LABEL = 'Polygon Mumbai';
+export const WALLET_CONNECT_MOBILE_LINKS = ['metamask', 'argent', 'trust'];
+
+const wcV2InitOptions = {
+    /**
+     * Project ID associated with [WalletConnect account](https://cloud.walletconnect.com)
+     */
+    projectId: '6f8be5b49de8e66f26bd138769b2af70',
+    /**
+     * Chains required to be supported by all wallets connecting to your DApp
+     */
+    // requiredChains: [1, 13881, 89],
+    // requiredChains: [13881],
+    /**
+     * Defaults to `appMetadata.explore` that is supplied to the web3-onboard init
+     * Strongly recommended to provide atleast one URL as it is required by some wallets (i.e. MetaMask)
+     * To connect with WalletConnect
+     */
+    dappUrl: 'http://YourAwesomeDapp.com',
+    qrcodeModalOptions: {
+        mobileLinks: WALLET_CONNECT_MOBILE_LINKS
+    }
+}
+
+const walletConnect = walletConnectModule(wcV2InitOptions)
+
+
+const onboard = Onboard({
+    // ... other Onboard options
+    wallets: [
+        walletConnect
+        //... other wallets
+    ],
+    appMetadata: {
+        explore: 'http://YourAwesomeDapp.com',
+        name: 'dss',
+        description: 'dwfgeg',
+        icon: "icon URL",
+        logo: "logo URL",
+    },
+    chains: [
+        {
+            id: POLYGON_CHAIN_ID,
+            token: POLYGON_TOKEN,
+            label: POLYGON_LABEL,
+            rpcUrl: POLYGON_ALCHEMY_RPC_URL
+        },
+        {
+            id: POLYGON_MUMBAI_ID,
+            token: POLYGON_TOKEN,
+            label: POLYGON_MUMBAI_LABEL,
+            rpcUrl: POLYGON_MUMBAI_RPC_URL
+        },
+        {
+            id: '0x1',
+            token: 'ETH',
+            label: 'Ethereum',
+            rpcUrl: 'https://rpc.ankr.com/eth'
+        },
+        {
+            id: '0xA86A',
+            token: 'AVAX',
+            label: 'Avalanche',
+            rpcUrl: 'https://api.avax.network/ext/bc/C/rpc'
+        }
+    ],
+})
+
 
 function App() {
 
@@ -31,70 +100,26 @@ function App() {
     const [connectButtonLabel, setConnectButtonLabel] = useState('Connect Metamask')
     const [loading, setLoading] = useState(true)
 
-    const wcV2InitOptions = {
-        /**
-         * Project ID associated with [WalletConnect account](https://cloud.walletconnect.com)
-         */
-        projectId: '6f8be5b49de8e66f26bd138769b2af70',
-        /**
-         * Chains required to be supported by all wallets connecting to your DApp
-         */
-        requiredChains: [1],
-        /**
-         * Defaults to `appMetadata.explore` that is supplied to the web3-onboard init
-         * Strongly recommended to provide atleast one URL as it is required by some wallets (i.e. MetaMask)
-         * To connect with WalletConnect
-         */
-        dappUrl: 'http://YourAwesomeDapp.com'
+    const WALLET_OPTIONS = {
+        METAMASK: 'METAMASK',
+        WALLET_CONNECT: 'WALLET_CONNECT'
     }
 
-    const walletConnect = walletConnectModule(wcV2InitOptions)
+    const [apiKey, setApiKey] = useState('43114')
+    const [connectedWallet, setConnectedWallet] = useState()
+
+    const initializeSingularity = () => {
+        window.Singularity.init(apiKey, () => {
+            alert(`SIngularity Initialized with api key - ${apiKey}`)
+        });
+    }
 
 
-    const onboard = Onboard({
-        // ... other Onboard options
-        wallets: [
-            walletConnect
-            //... other wallets
-        ],
-        appMetadata: {
-            explore: 'http://YourAwesomeDapp.com',
-            name: 'dss',
-            description: 'dwfgeg'
-        },
-        chains: [
-        {
-            id: POLYGON_CHAIN_ID,
-            token: POLYGON_TOKEN,
-            label: POLYGON_LABEL,
-            rpcUrl: POLYGON_ALCHEMY_RPC_URL
-        },
-        {
-            id: POLYGON_MUMBAI_ID,
-            token: POLYGON_TOKEN,
-            label: POLYGON_MUMBAI_LABEL,
-            rpcUrl: POLYGON_MUMBAI_RPC_URL
-        }
-    ],
-    })
 
 
   useEffect(() => {
     console.log('adding event listener', new Date().getSeconds());
     window.document.body.addEventListener('Singularity-mounted', () => {
-
-        // eslint-disable-next-line no-restricted-globals
-        const url_string = location.href;
-        const url = new URL(url_string);
-        const key = url.searchParams.get("key") ?? 2;
-
-        console.log('key from params', key)
-
-
-      // let key = 2;
-      // let key = 97;
-
-      window.Singularity.init(key);
 
       window.SingularityEvent.subscribe('SingularityEvent-logout', () => {
         window.SingularityEvent.close();
@@ -139,7 +164,8 @@ function App() {
       const add = await ethereum.request({method: 'eth_requestAccounts', params: []});
       const addValue = add[0]
       setAddress(addValue)
-      setConnectButtonLabel('Connected')
+      setConnectedWallet(WALLET_OPTIONS.METAMASK)
+      // setConnectButtonLabel('Connected')
       console.log('address', add)
   }
 
@@ -153,12 +179,7 @@ function App() {
         setWcProvider(walletData.provider)
         setAddress(walletData.accounts[0].address)
 
-        // ethereum = walletData.instance
-        // const add = await ethereum.request({method: 'eth_requestAccounts', params: []});
-        // const addValue = add[0]
-        // setAddress(addValue)
-        // setConnectButtonLabel('Connected')
-        // console.log('address', add)
+        setConnectedWallet(WALLET_OPTIONS.WALLET_CONNECT)
     }
 
     const onPersonalMessageSignedClicked = async () => {
@@ -231,12 +252,13 @@ function App() {
     const handleLoginWithProvider = async () => {
       console.log('using this to login', wcProvider)
 
+        if(connectedWallet === WALLET_OPTIONS.METAMASK){
+            await window.SingularityEvent.loginWithProvider(ethereum)
+        }
 
-        const etherProvider = new providers.Web3Provider(wcProvider);
-
-        console.log('etherProvider',etherProvider)
-
-        await window.SingularityEvent.loginWithProvider(wcProvider)
+        if(connectedWallet === WALLET_OPTIONS.WALLET_CONNECT){
+            await window.SingularityEvent.loginWithProvider(wcProvider)
+        }
     }
 
 
@@ -248,14 +270,49 @@ function App() {
             <center><h1>Loading...Please Wait...</h1></center>
         }
       <center><h2>Welcome to the best game ever</h2></center>
-        <p>1. Connect wallet using the connect button below</p>
-        <p>2. Once you see your address...you are logged in to the game. Click on "Login with provider" to login to singularity using provider available on game side</p>
-        <p>3. Now test the transactions</p>
-      <p>{address}</p>
-      <button onClick={onConnectMetamaskClicked}>{connectButtonLabel}</button>
-        <button onClick={onConnectWalletConnectClicked}>Connect wallet connect</button>
+
+        <p>1. Initialize Singularity</p>
+
+        Api Key:
+        <TextField
+            placeholder="Api Key"
+            value={apiKey}
+            onChange={e => setApiKey(e.target.value)}
+            inputProps={{ style: { fontSize: '20px', height: '100%' } }}
+            sx={{ mt: 1 }}
+        />
+
+        <button onClick={initializeSingularity}>Initialize Singularity</button>
+
+        <p>2. Connect wallet using any of the the connect button below</p>
+
+        { connectedWallet &&
+            <p>Connected using ${connectedWallet} - ${address}</p>
+        }
+        { !connectedWallet &&
+            <>
+            <button onClick={onConnectMetamaskClicked}>{connectButtonLabel}</button>
+            <button onClick={onConnectWalletConnectClicked}>Connect wallet connect</button>
+            </>
+        }
+
+
+        <p>3. Once you see your address...you are logged in to the game. Click on "Login with provider" to login to singularity using provider available on game side</p>
+        <p>{address}</p>
         <button onClick={handleLoginWithProvider}>Login with provider</button>
+
+        <p>4. Now test the transactions</p>
+
+
+        <TextField
+            placeholder="Text Message here"
+            value={personalMessage}
+            onChange={e => setPersonalMessage(e.target.value)}
+            inputProps={{ style: { fontSize: '20px', height: '100%' } }}
+            sx={{ mt: 1 }}
+        />
       <button onClick={onPersonalMessageSignedClicked}>Get Personal Message Signed</button>
+
       {/*<button onClick={onTypedMessageSignedClicked}>Get Typed Message Signed</button>*/}
       {/*<button onClick={handleReceiveTransactionClicked}>Start Receive Transaction</button>*/}
       <TransactionCard />
