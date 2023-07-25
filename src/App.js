@@ -105,7 +105,7 @@ function App() {
         WALLET_CONNECT: 'WALLET_CONNECT'
     }
 
-    const [apiKey, setApiKey] = useState('43114')
+    const [apiKey, setApiKey] = useState('F21nGK7KSyFqkeI6BTDkTU3vn0V76imb')
     const [connectedWallet, setConnectedWallet] = useState()
 
     const initializeSingularity = () => {
