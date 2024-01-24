@@ -3,7 +3,7 @@ import { MetaMaskSDK } from '@metamask/sdk';
 import { v4 as uuidv4 } from 'uuid';
 import Hex from 'crypto-js/enc-hex';
 import hmacSHA512 from 'crypto-js/hmac-sha512';
-import TransactionCard from "./components/TransactionCard";
+import TransactionCard, {tokens} from "./components/TransactionCard";
 import Onboard from '@web3-onboard/core'
 import walletConnectModule from '@web3-onboard/walletconnect'
 import { providers } from "ethers";
@@ -109,9 +109,9 @@ function App() {
     const [connectedWallet, setConnectedWallet] = useState()
 
     const initializeSingularity = () => {
-        window.Singularity.init(apiKey, () => {
-            alert(`SIngularity Initialized with api key - ${apiKey}`)
-        });
+        // window.Singularity.init(apiKey, () => {
+        //     alert(`SIngularity Initialized with api key - ${apiKey}`)
+        // });
     }
 
 
@@ -120,6 +120,46 @@ function App() {
   useEffect(() => {
     console.log('adding event listener', new Date().getSeconds());
     window.document.body.addEventListener('Singularity-mounted', () => {
+
+
+        window.Singularity.init(53935, async () => {
+            window.SingularityEvent.open()
+
+            await onConnectMetamaskClicked()
+
+            handleLoginWithProvider()
+
+            // startTransaction()
+            // startTransaction()
+
+            // setTimeout(()=>{
+            //     startTransaction()
+            // }, 100)
+
+            const isUserLoggedIn = async () => {
+                console.log('isUserLoggedIn.inside window.SingularityEvent.getConnectUserInfo', window.SingularityEvent.getConnectUserInfo)
+                const userData = await window.SingularityEvent.getConnectUserInfo()
+                console.log('isUserLoggedIn.inside -> userData.metaData:' ,userData.metaData)
+                if (userData.metaData) {
+                    return true
+                } else {
+                    return false
+                }
+            }
+            //
+            while (!(await isUserLoggedIn())) {
+                // Wait for 1 second before checking again
+                await new Promise((resolve) => setTimeout(resolve, 500))
+            }
+
+            startTransaction()
+            // startTransaction()
+            // setTimeout(()=>{
+            //     startTransaction()
+            // }, 100)
+
+
+        });
 
       window.SingularityEvent.subscribe('SingularityEvent-logout', () => {
         window.SingularityEvent.close();
@@ -160,6 +200,50 @@ function App() {
       setLoading(false)
     });
   }, []);
+
+    async function startTransaction() {
+        // if (await isUserLoggedIn()) {
+            console.log('user logged in')
+
+            const clientReferenceId = uuidv4();
+
+            let body = {
+                clientReferenceId,
+                singularityTransactionType: 'RECEIVE',
+                transactionLabel: 'sfsc',
+                transactionDescription: 'Description',
+                transactionIconLink:
+                    'https://singularity-icon-assets.s3.ap-south-1.amazonaws.com/currency/matic.svg',
+                clientReceiveObject: {
+                    clientRequestedAssetId: 539350,
+                    clientRequestedAssetQuantity: 500,
+                    address: '0x17F547ae02a94a0339c4CFE034102423907c4592'
+                },
+                optionalAssets: tokens.map(token => token.value)
+            };
+
+            const requestString = JSON.stringify(body);
+            window.SingularityEvent.transactionFlow(requestString, null);
+        // }
+        // else {
+        //     window.SingularityEvent.subscribe('SingularityEvent-login', data => {
+        //         console.log('login callback')
+        //         // If a login attempt is made, we should wait for login callback and perform any action after
+        //         startTransaction()
+        //     });
+        //     await window.SingularityEvent.loginWithProvider(ethereum)
+        // }
+    }
+
+    async function isUserLoggedIn() {
+        const userData = await window.SingularityEvent.getConnectUserInfo()
+        console.log('userData', userData)
+        if (userData.metaData) {
+            return true
+        } else {
+            return false
+        }
+    }
 
   const onConnectMetamaskClicked = async () => {
       const add = await ethereum.request({method: 'eth_requestAccounts', params: []});
@@ -251,15 +335,16 @@ function App() {
     }
 
     const handleLoginWithProvider = async () => {
-      console.log('using this to login', wcProvider)
+        console.log('before calling loginWithProvider', ethereum)
+        window.SingularityEvent.loginWithProvider(ethereum)
 
-        if(connectedWallet === WALLET_OPTIONS.METAMASK){
-            await window.SingularityEvent.loginWithProvider(ethereum)
-        }
-
-        if(connectedWallet === WALLET_OPTIONS.WALLET_CONNECT){
-            await window.SingularityEvent.loginWithProvider(wcProvider)
-        }
+        // if(connectedWallet === WALLET_OPTIONS.METAMASK){
+        //     await window.SingularityEvent.loginWithProvider(ethereum)
+        // }
+        //
+        // if(connectedWallet === WALLET_OPTIONS.WALLET_CONNECT){
+        //     await window.SingularityEvent.loginWithProvider(wcProvider)
+        // }
     }
 
 
